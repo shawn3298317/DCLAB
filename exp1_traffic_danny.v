@@ -123,6 +123,13 @@ module exp1_traffic )
  		endcase
  	end
 
+ 	// countdown
+ 	always@(*) begin
+ 		if(clks==24'h7fffff)
+ 			next_countdown = (countdown == 0)? C_PERIOD: countdown - 4'd1;
+ 		else
+ 			next_countdown = countdown;
+
  	// 7-segment Displays
  	always@(*) begin
  		case(countdown[0])
