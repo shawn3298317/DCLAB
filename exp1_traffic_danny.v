@@ -173,9 +173,12 @@ module exp1_traffic )
 			HEX1      <= 7'h7f;
 		end
 		else begin
+			//TODO...
 			clks      <= next_clks;
 			state     <= next_state;
 			countdown <= next_countdown;
+			countUp_state   <= next_countUp_state;
+			countDn_state   <= next_countDn_state;
 			HEX0      <= next_HEX0;
 			HEX1      <= next_HEX1;
 		end
