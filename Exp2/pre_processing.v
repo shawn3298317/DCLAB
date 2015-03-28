@@ -21,11 +21,13 @@ module pre_processing (
     always@(*) begin
         if (start == 1'b1) begin
             i = 0;
+            temp = 0;
             T_o = 0;
+            finish = 0;
         end
 
         else begin
-            if (i != 8'd256) begin
+            if (i != 9'd256) begin
                 temp = M_i<<1;
                 temp = (temp > N_i)? temp - N: temp;
                 i = i+1;
