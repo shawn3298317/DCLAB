@@ -53,14 +53,19 @@ module exp2_rsa (
 //==== parameter part ======================================
     integer i;
 //==== reg/wire declaration ================================
-    reg    [255:0] input_data [2:0];
+    reg    [255:0] input_data_0;
+    reg    [255:0] input_data_1;
+    reg    [255:0] input_data_2;
     wire   [255:0] output_data;
-    reg    [255:0] next_input_data [2:0];
-    reg    [7:0]   data_o_r;
-    reg    [7:0]   next_data_o_r;
-    reg            ready_r;
-    wire           next_ready;
-    
+    reg    [255:0] next_input_data_0;
+    reg    [255:0] next_input_data_1;
+    reg    [255:0] next_input_data_2;
+    //reg    [7:0]   data_o_r;
+    //reg    [7:0]   next_data_o_r;
+    //reg            ready_r;
+    //wire           next_ready;
+    wire    [7:0]   addr_idx;
+
 //==== combinational part ==================================
     
     //output of LA
@@ -72,42 +77,52 @@ module exp2_rsa (
     assign reg_sel_o  = reg_sel;
     assign addr_o     = addr;
     assign data_i_o   = data_i;
+	assign ready_o    = ready;
 
-    assign output_data = 256'b0;
-    assign next_ready  = 1'b1;
-    //write data, we == 1
-	
-	
+    //assign output_data = 256'b0;
+    //assign next_ready  = 1'b1;
+    //write data, we == 1   
+	assign addr_idx   = addr<<2'd3;
+
     always@(*) begin
-        if(ready == 1 && we == 1) begin
-            for( i = 0; i < 3; i = i + 1 )
-                next_input_data[i] = input_data[i];
+        if(we == 1) begin      
+			next_input_data_0 = input_data_0;
+            next_input_data_1 = input_data_1;
+            next_input_data_2 = input_data_2;
             case(reg_sel)
-                2'd3: next_input_data[2][addr<<3 +: 8] = data_i;
-                2'd2: next_input_data[1][addr<<3 +: 8] = data_i;
-                2'd1: next_input_data[0][addr<<3 +: 8] = data_i;
+                2'd3: next_input_data_2[addr_idx  +: 8] = data_i;
+                2'd2: next_input_data_1[addr_idx  +: 8] = data_i;
+                2'd1: next_input_data_0[addr_idx  +: 8] = data_i;
+                default: begin
+                    next_input_data_0 = input_data_0;
+                    next_input_data_1 = input_data_1;
+                    next_input_data_2 = input_data_2;
+                end
             endcase
         end
         else begin
-            for( i = 0; i < 3; i = i + 1 )
-                next_input_data[i] = input_data[i];
+            next_input_data_0 = input_data_0;
+            next_input_data_1 = input_data_1;
+            next_input_data_2 = input_data_2;
         end
     end
+	
+	LSB_ME lsb_me(.reset(reset),.clk(clk),.M_i(input_data_0),.N_i(input_data_2),.d_i(input_data_1),.start(start),.ready(ready),.S_out(output_data));
 
 	
 	
 	
     //output data, oe == 1
-    always@(*) begin
-        if(ready == 1 && oe == 1) begin
-            next_data_o_r = output_data[addr<<3 +: 8];
+    /*always@(*) begin
+        if( oe == 1 ) begin
+            next_data_o_r = output_data[addr_idx +: 8];
         end
         else 
-			next_data_o_r = data_o_r;
-    end
-
-    assign data_o = data_o_r;
-    assign ready  = ready_r;
+            next_data_o_r = data_o_r;
+    end*/
+    assign data_o = (oe == 1)? (output_data[addr_idx +: 8]):8'd0;
+    //assign data_o = data_o_r;
+    //assign ready  = ready_r;
 
 	
 	
@@ -116,19 +131,17 @@ module exp2_rsa (
 //==== sequential part ===================================== 
     
     always@(posedge clk or posedge reset) begin
-        if(reset == 1) begin
-            input_data[0] = 256'b0;
-            input_data[1] = 256'b0;
-            input_data[2] = 256'b0;
-            ready_r       = 1'b1;
-            data_o_r      = 7'b0;
+        if(reset) begin
+            input_data_0 <= 256'b0;
+            input_data_1 <= 256'b0;
+            input_data_2 <= 256'b0;
+            //data_o_r     <= 7'b0;
         end
         else begin
-            input_data[0] = next_input_data[0];
-            input_data[1] = next_input_data[1];
-            input_data[2] = next_input_data[2];
-            ready_r       = next_ready;
-            data_o_r      = next_data_o_r;
+            input_data_0 <= next_input_data_0;
+            input_data_1 <= next_input_data_1;
+            input_data_2 <= next_input_data_2;
+            //data_o_r     <= next_data_o_r;
         end
     end
  
