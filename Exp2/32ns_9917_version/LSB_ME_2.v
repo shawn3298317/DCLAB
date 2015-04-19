@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-odule MSB_LE (
-=======
 `timescale 1ns/1ps
 module LSB_ME (
 	reset,
->>>>>>> 7b70402c2b15ae183f34f3b083ecf61c7b4a8bf4
 	clk,
 	M_i,
 	N_i,
@@ -15,12 +11,8 @@ module LSB_ME (
 	S_out
 );
 
-<<<<<<< HEAD
-	input 		  	   clk,
-=======
 	input 		  	   clk, 
 					   reset,
->>>>>>> 7b70402c2b15ae183f34f3b083ecf61c7b4a8bf4
 					   start;
 	input [255:0] 	   M_i,
 					   N_i,
@@ -30,14 +22,8 @@ module LSB_ME (
 	output reg [255:0] S_out;
 	
 	
-<<<<<<< HEAD
-	reg   [1:0]   	   cmd_START_ST;
-	reg   [1:0]   	   next_cmd_START_ST;
-	wire  [1:0]   	   FINISH_FLAG;
-=======
 	reg   [255:0]      next_S_out;
 	wire  [2:0]   	   finish_flag;
->>>>>>> 7b70402c2b15ae183f34f3b083ecf61c7b4a8bf4
 	wire  [255:0] 	   T_o1,
 					   S_o,
 					   T_o2;
@@ -47,117 +33,6 @@ module LSB_ME (
 					   next_S;
 	reg   [8:0]   	   i,
 					   next_i;
-<<<<<<< HEAD
-	
-	
-	parameter ST_PP      = 2'b10;
-	parameter ST_WAITING = 2'b00;
-	parameter ST_MA      = 2'b01;
-	
-	parameter FLAG_PP    = 2'b10;
-	parameter FLAG_MA    = 2'b01;
-	
-	
-	
-	
-	//****module initialization*****//
-	PreProcess      PP   (.start(cmd_START_ST[1]),.N_i(N_i),.M_i(M_i)          ,.T_o(T_o1),.finish(FINISH_FLAG[1]));
-	MA              MA_S (.start(cmd_START_ST[0]),.N_i(N_i),.A_i(S)   ,.B_i(T) ,.V_o(S_o ),.finish(FINISH_FLAG[0]));
-	MA              MA_T (.start(cmd_START_ST[0]),.N_i(N_i),.A_i(T)   ,.B_i(T) ,.V_o(T_o2),.finish(FINISH_FLAG[0]));
-	
-	
-	
-	// S & T selector
-	always@(*) begin
-		
-		// counter
-		next_i = (i<9'd256)?i+1:i;
-		case(FINISH_FLAG)
-			
-			FLAG_PP: begin
-				S = 256'd1;
-				T = T_o1;;
-				FINISH_FLAG = FLAG_MA;
-			end
-			
-			FLAG_MA: begin
-				next_i = (i < 9'd256)? i+1: i;
-				if( i == 9'd256) begin
-					S_out = S; // can we do this??
-					ready  = 1'b1; //can we do this??
-				end
-				else begin
-					T = T_o2;
-					if(d_i[i] == 1'b1)
-						S = S_o;
-					else
-						S = S;
-				end
-				
-			end
-			
-			default: begin
-				S = 256'd1;
-				T = T_o1;
-			end
-		
-		endcase
-		
-	
-	end
-	
-	
-	/*
-	always@(*) begin
-		
-		case(cmd_START_ST)
-		
-			ST_PP: begin
-				next_cmd_START_ST = ST_WAITING;
-			end
-			
-			ST_WAITING: begin
-				if(FINISH_FLAG == FLAG_PP || FINISH_FLAG == FLAG_MA)
-					next_cmd_START_ST = ST_MA;
-				else
-					next_cmd_START_ST = ST_WAITING;
-			end
-			
-			ST_MA: begin
-				next_cmd_START_ST = ST_WAITING;
-			end
-		
-		
-		endcase
-	
-	end
-	*/
-	//*sequential*//
-	/*
-	always@(posedge clk or posedge start) begin
-		
-		if(start == 1'b1) begin
-			cmd_START_ST = ST_PP;
-			i = 0;
-			ready = 0;
-			S = 0;
-			T = 0;
-			S_out = 0;
-
-		end
-		else begin
-			i = next_i;
-			S = next_S;
-			T = next_T;
-			cmd_START_ST  = next_cmd_START_ST;
-		
-		end
-	end
-	*/
-	
-	
-endmodule
-=======
 	reg   [3:0]        LSB_ST,
                        next_LSB_ST;
 
@@ -310,4 +185,3 @@ endmodule
 	
 	
 endmodule
->>>>>>> 7b70402c2b15ae183f34f3b083ecf61c7b4a8bf4

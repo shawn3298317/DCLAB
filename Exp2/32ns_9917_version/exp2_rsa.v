@@ -84,14 +84,6 @@ module exp2_rsa (
     //write data, we == 1   
 	assign addr_idx   = addr<<2'd3;
 
-<<<<<<< HEAD
-    //assign output_data = 256'b0;
-    //assign next_ready  = 1'b1;
-    //write data, we == 1
-	
-	
-=======
->>>>>>> 7b70402c2b15ae183f34f3b083ecf61c7b4a8bf4
     always@(*) begin
         if(we == 1) begin      
 			next_input_data_0 = input_data_0;
@@ -117,7 +109,7 @@ module exp2_rsa (
 	
 	LSB_ME lsb_me(.reset(reset),.clk(clk),.M_i(input_data_0),.N_i(input_data_2),.d_i(input_data_1),.start(start),.ready(ready),.S_out(output_data));
 
-	LSB_ME LSB_ME(.clk(clk),.M_i(input_data[1]),.N_i(input_data[3]),.d_i(input_data[2]).start(start),.ready(ready),.S_out(output_data));
+	
 	
 	
     //output data, oe == 1
