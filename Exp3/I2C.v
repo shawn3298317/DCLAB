@@ -66,12 +66,13 @@ end
 //input to register buffer
 always@(*) begin
 	DATA_REG    = (ACTIVATE == 1'b1) ? {1'b0,DATA[23:16],1'bz,DATA[15:8],1'bz,DATA[7:0],1'bz,2'b01} : 30'b0;
+	DATA_REG    = (ACTIVATE == 1'b1) ? {1'b0,DATA[23:16],1'bz,DATA[15:8],1'bz,DATA[7:0],1'bz,2'b01} : 30'b0;
 end
 
 
 //counter logic
 always@(*) begin
-	next_SD_cnt = ((ACTIVATE == 1'b1) && (SD_cnt<6'd29)) ? SD_cnt + 1'b1 : SD_cnt;
+	next_SD_cnt = ((ACTIVATE == 1'b1) && (SD_cnt<6'd30)) ? SD_cnt + 1'b1 : SD_cnt;
 end
 
 //SDO output logic
