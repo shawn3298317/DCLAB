@@ -73,8 +73,8 @@ module exp2_rsa (
     assign addr_o     = addr;
     assign data_i_o   = data_i;
 
-    assign output_data = 256'b0;
-    assign next_ready  = 1'b1;
+    //assign output_data = 256'b0;
+    //assign next_ready  = 1'b1;
     //write data, we == 1
 	
 	
@@ -94,7 +94,7 @@ module exp2_rsa (
         end
     end
 
-	
+	LSB_ME LSB_ME(.clk(clk),.M_i(input_data[1]),.N_i(input_data[3]),.d_i(input_data[2]).start(start),.ready(ready),.S_out(output_data));
 	
 	
     //output data, oe == 1

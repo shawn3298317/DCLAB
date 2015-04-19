@@ -1,4 +1,4 @@
-module LSB_ME (
+odule MSB_LE (
 	clk,
 	M_i,
 	N_i,
@@ -55,35 +55,33 @@ module LSB_ME (
 		
 		// counter
 		next_i = (i<9'd256)?i+1:i;
-		
 		case(FINISH_FLAG)
 			
 			FLAG_PP: begin
-				next_S = 256'd1;
-				next_T = T_o1;
+				S = 256'd1;
+				T = T_o1;;
+				FINISH_FLAG = FLAG_MA;
 			end
 			
 			FLAG_MA: begin
-				
+				next_i = (i < 9'd256)? i+1: i;
 				if( i == 9'd256) begin
-					next_S = S;
-					next_T = T;
 					S_out = S; // can we do this??
 					ready  = 1'b1; //can we do this??
 				end
 				else begin
-					next_T = T_o2;
+					T = T_o2;
 					if(d_i[i] == 1'b1)
-						next_S = S_o;
+						S = S_o;
 					else
-						next_S = S;
+						S = S;
 				end
 				
 			end
 			
 			default: begin
-				next_S = S;
-				next_T = T;
+				S = 256'd1;
+				T = T_o1;
 			end
 		
 		endcase
@@ -92,6 +90,7 @@ module LSB_ME (
 	end
 	
 	
+	/*
 	always@(*) begin
 		
 		case(cmd_START_ST)
@@ -115,8 +114,9 @@ module LSB_ME (
 		endcase
 	
 	end
-	
+	*/
 	//*sequential*//
+	/*
 	always@(posedge clk or posedge start) begin
 		
 		if(start == 1'b1) begin
@@ -136,7 +136,7 @@ module LSB_ME (
 		
 		end
 	end
-	
+	*/
 	
 	
 endmodule
