@@ -3,8 +3,9 @@ module SRAM(
 	//Host side
 	clk,
 	reset,
+	enable,
 	WriteRAM,
-	ReadRAM,   //= Play (by Tommy's module)
+	ReadRAM,     //= Play (by Tommy's module)
 	addr,
 	DataWrite,   //data to be written in
 	DataRead ,   //data to be read out
@@ -17,7 +18,7 @@ module SRAM(
 	SRAM_LB,
 	SRAM_UB
 );
-	input             clk, reset, WriteRAM, ReadRAM;
+	input             clk, reset, enable, WriteRAM, ReadRAM;
 	input      [19:0] addr;
 	input  reg [15:0] DataWrite;
 	output reg [15:0] DataRead ;
@@ -33,7 +34,7 @@ module SRAM(
 	assign STATE   = {ReadRAM, WriteRAM};
 	*/
 
-	assign SRAM_CE = 0; //SRAM is always ready
+	assign SRAM_CE = ~enable; 
 	assign SRAM_UB = 0; //upper byte is always available
 	assign SRAM_LB = 0; //lower byte is always available
 	assign SRAM_OE = ~ReadRAM; 
