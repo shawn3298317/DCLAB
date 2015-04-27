@@ -2,136 +2,139 @@
 module Audio_Ineterface(
     clk,
     reset,
-    Bclk,
-    ADCLRclk,
-    DACLRclk,
-    ADCData,
-    dac_data,  // receive data from the SRAM
-    record,    // writing data from voice
-    play,      // reading data from the SRAM
-    DACData,   // output data to the CODEC
-    adc_data,  // store data to the SRAM
-    ready
+    //-----signal and inputdata from codec-----
+    Bclk, 
+    ADCLRk,
+    DACLRk,
+    ADCdata,
+    //-----operation switch-----
+    record, 
+    play,
+    //-----output data to codec-----
+    DACdata 
 );
 
 parameter RECORD   = 2'b01;
 parameter PLAY     = 2'b10;
 parameter STAND_BY = 2'b00;
-    //-----input & output declaration-----
-input  clk,
-       reset,
-       Bclk,
-       ADCLRclk,
-       DACLRclk,
-       ADCData,
-       record,
-       play;
-input  [15:0] dac_data;
 
-output DACData,
-       ready;
-output [15:0] adc_data;
+parameter LOW      = 1'b0;
+parameter HIGH     = 1'b1;
+//-----input & output declaration-----
+input  clk;
+input  reset;
+input  Bclk;
+input  ADCdata;
+input  ADCLRk;
+input  DACLRk;
+input  record;
+input  play;
 
-    //-----register & wire declaration-----
-reg    [15:0] adc_data_r,
-              next_adc_data_r;
-reg    ready_r,
-       next_ready,
-       DACData_r;
-reg    [4:0]  Bclk_counter,       // counting cycles of Bclk
-              next_Bclk_counter;
-reg    [1:0]  state,
-              next_state;
+output DACdata;
 
-SRAM()
+//-----register & wire declaration-----
+reg    [15:0] adc_data;         
+reg    [15:0] next_adc_data;
+reg    [15:0] dac_data;
+reg    [4:0]  Bclk_counter;       // counting cycles of Bclk
+reg    [4:0]  next_Bclk_counter;
+reg    [1:0]  operation_state;
+reg    [1:0]  next_operation_state;
+reg    ADCLRk_state;
+reg    next_ADCLRk_state;
+reg    start;                     // start to get ADCdata
+reg    next_start;
+reg    DACdata_r;
 
-assign Bclk     = ~clk;
-assign ready    = ready_r;
-assign adc_data = adc_data_r;
-assign DACData  = DACData_r;
+wire   ready;                     // write enable for SRAM 
+//SRAM(clk, reset, play, ready, adc_data dac_data)  //calling SRAM module
 
+assign ready   = (Bclk_counter == 5'd16 && operation_state == RECORD)? 1'b1:1'b0; 
+assign DACdata = DACdata_r;
+
+// next_state logic for operation mode
 always@(*) begin
-    if(record == 1'b1) 
-        next_state = RECORD;
-    else if(play == 1'b1)
-        next_state = PLAY;
+    if(record == 1'b1 && play == 1'b0)
+        next_operation_state = RECORD; 
+    else if(record == 1'b0 && play == 1'b1) 
+        next_operation_state = PLAY;
     else
-        next_state = STAND_BY;
+        next_operation_state = STAND_BY;
 end
 
 always@(*) begin
-    case(state)
+    if(ADCLRk == 1'b0) next_ADCLRk_state = LOW;
+    else               next_ADCLRk_state = HIGH;
+end
+
+// generate start pulse
+always@(*) begin
+    if(ADCLRk_state == LOW && next_ADCLRk_state == HIGH)
+        next_start = 1'b1;
+    else if(ADCLRk_state == HIGH && next_ADCLRk_state == LOW)
+        next_start = 1'b1;
+    else
+        next_start = 1'b0;
+end
+
+// next_state logic
+always@(*) begin
+    next_adc_data     = adc_data;
+    next_Bclk_counter = 5'b0;
+    DACdata_r         = 1'b0;
+    case(operation_state)
         RECORD: begin
-            if(ADCLRclk == 1'b1) begin                        //not sure yet, this is definitely wrong
-                if(Bclk_counter == 5'b0) begin
-                    next_Bclk_counter = Bclk_counter + 5'b1;
-                    next_adc_data_r   = 16'b0;
-                    next_ready        = 1'b0;
-                end
-                else if(Bclk_counter == 5'd17) begin
-                    next_Bclk_counter = 5'b0;
-                    next_adc_data_r   = adc_data_r;
-                    next_ready        = 1'b1;
-                end
-                else begin
-                    next_Bclk_counter = Bclk_counter + 5'b1;
-                    next_adc_data_r[5'd16 - Bclk_counter] = ADCData;
-                    next_ready = 1'b0;
-                end
+            if(start == 1'b1) begin
+                next_adc_data[5'd15 - Bclk_counter] = ADCdata;
+                next_Bclk_counter                   = Bclk_counter + 5'b1;
             end
             else begin
-                next_Bclk_counter = 5'b0;
-                next_adc_data_r   = 16'b0;
-                next_ready        = 1'b0;
+                if(Bclk_counter == 5'd16) begin
+                    next_adc_data     = adc_data;
+                    next_Bclk_counter = 5'b0;
+                end
+                else begin
+                    next_adc_data[5'd15 - Bclk_counter] = ADCdata;
+                    next_Bclk_counter                   = Bclk_counter + 5'b1; 
+                end
             end
         end
         PLAY: begin
-            if(DACLRclk == 1'b1) begin                       //not sure yet, this is definitely wrong
-                if(Bclk_counter == 5'b0) begin
-                    next_Bclk_counter = Bclk_counter + 5'b1;
-                    DACData_r         = 1'b0;
-                end
-                else if(Bclk_counter == 5'd17) begin
-                    next_Bclk_counter = 5'b0;
-                    DACData_r         = 1'b0;
-                end
-                else begin
-                    next_Bclk_counter = Bclk_counter + 5'b1;
-                    DACData_r         = dac_data[5'd16 - Bclk_counter];
-                end
+            if(start == 1'b1) begin
+                DACdata_r         = dac_data[5'd15 - Bclk_counter];
+                next_Bclk_counter = Bclk_counter + 5'b1;
             end
             else begin
-                next_Bclk_counter = 5'b0;
-                DACData_r         = 1'b0;
+                if(Bclk_counter == 5'd16) begin
+                    DACdata_r         = 1'b0;
+                    next_Bclk_counter = 5'd0; 
+                end
+                else begin
+                    DACdata_r         = dac_data[5'd15 - Bclk_counter];
+                    next_Bclk_counter = Bclk_counter + 5'b1;
+                end
             end
         end
         STAND_BY: begin
             next_Bclk_counter = 5'b0;
-            next_adc_data_r   = 16'b0;
-            DACData_r         = 1'b0;
-            next_ready        = 1'b0;
-        end
-        default: begin
-            next_Bclk_counter = 5'b0;
-            next_adc_data_r   = 16'b0;
-            DACData_r         = 1'b0;
-            next_ready        = 1'b0;
+            next_adc_data     = adc_data;
+            DACdata_r         = 1'b0;
         end
     endcase
 end
 
 always@(negedge Bclk or negedge reset) begin
     if(!reset) begin
-        Bclk_counter = 5'b0;
-        state = STAND_BY;
-        ready_r = 1'b0;
-        adc_data_r = 16'b0;
+        Bclk_counter           = 5'b0;
+        operation_state        = STAND_BY;
+        ADCLRk_state           = LOW;
+        adc_data               = 16'b0;
     end
     else begin
-        Bclk_counter = next_Bclk_counter;
-        state = next_state;
-        ready_r = next_ready;
-        adc_data_r = next_adc_data_r;
+        Bclk_counter           = next_Bclk_counter;
+        operation_state        = next_operation_state;
+        ADCLRk_state           = next_ADCLRk_state;
+        adc_data               = next_adc_data;
     end
 end
 
